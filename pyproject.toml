@@ -5,9 +5,22 @@ description = ""
 authors = ["Alessandro Pacielli <alessandropacielli@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.7.1,<4.0"
+jupyter = "^1.0.0"
+jupyterlab = "^3.0.10"
+pandas = "^1.2.3"
+tensorflow = "^2.4.1"
+matplotlib = "^3.4.1"
+scikit-learn = "^0.24.1"
+tensorflow-datasets = "^4.2.0"
+tensorflow-text = "^2.4.3"
 
 [tool.poetry.dev-dependencies]
+black = "^20.8b1"
+autopep8 = "^1.5.6"
+jupyterlab-git = "^0.22.3"
+nbdime = "^2.1.0"
+isort = "^5.8.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
