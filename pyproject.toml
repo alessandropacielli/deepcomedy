@@ -15,11 +15,15 @@ tensorflow-text = "^2.4.3"
 jupyterlab = "^3.0.14"
 wandb = "^0.10.27"
 jupyterlab-git = "^0.30.0"
+funcy = "^1.15"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
 autopep8 = "^1.5.6"
 isort = "^5.8.0"
+jupyterlab-code-formatter = "^1.4.10"
+mypy = "^0.812"
+pylint = "^2.8.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
