@@ -3,6 +3,8 @@ import tensorflow as tf
 
 from .layers import *
 
+import time
+
 
 ################################################################# Masking ##########################################################################
 def create_padding_mask(seq):
@@ -178,6 +180,8 @@ class Transformer(tf.keras.Model):
     ):
         super(Transformer, self).__init__()
 
+        self.d_model = d_model
+
         self.encoder = Encoder(
             num_layers, d_model, num_heads, dff, input_vocab_size, pe_input, rate
         )
@@ -206,6 +210,100 @@ class Transformer(tf.keras.Model):
         )  # (batch_size, tar_seq_len, target_vocab_size)
 
         return final_output, attention_weights
+
+
+class TransformerTrainer(object):
+    def __init__(
+        self,
+        transformer,
+        optimizer=None,
+        loss_function=tf.keras.losses.SparseCategoricalCrossentropy(
+            from_logits=True, reduction="none"
+        ),
+        checkpoint_every=5,
+        checkpoint_save_path="./checkpoints/train",
+    ):
+        super(TransformerTrainer, self).__init__()
+
+        self.transformer = transformer
+
+        self.loss_function = loss_function
+
+        if optimizer is None:
+            learning_rate = TransformerCustomSchedule(self.transformer.d_model)
+            self.optimizer = tf.keras.optimizers.Adam(
+                learning_rate, beta_1=0.9, beta_2=0.98, epsilon=1e-9
+            )
+        else:
+            self.optimizer = optimizer
+
+        self.checkpoint_every = checkpoint_every
+        if checkpoint_save_path is not None:
+
+            ckpt = tf.train.Checkpoint(
+                transformer=self.transformer, optimizer=self.optimizer
+            )
+
+            self.checkpoint_manager = tf.train.CheckpointManager(
+                ckpt, checkpoint_save_path, max_to_keep=5
+            )
+
+            # if a checkpoint exists, restore the latest checkpoint.
+            if self.checkpoint_manager.latest_checkpoint:
+                ckpt.restore(self.checkpoint_manager.latest_checkpoint)
+                print("Latest checkpoint restored!!")
+
+        self.train_loss = tf.keras.metrics.Mean(name="train_loss")
+        self.train_accuracy = tf.keras.metrics.Mean(name="train_accuracy")
+
+    @tf.function
+    def train_step(self, inp, tar):
+        tar_inp = tar[:, :-1]
+        tar_real = tar[:, 1:]
+
+        enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
+
+        with tf.GradientTape() as tape:
+            predictions, _ = self.transformer(
+                inp, tar_inp, True, enc_padding_mask, combined_mask, dec_padding_mask
+            )
+            loss = padded_loss(tar_real, predictions, self.loss_function)
+
+        gradients = tape.gradient(loss, self.transformer.trainable_variables)
+        self.optimizer.apply_gradients(
+            zip(gradients, self.transformer.trainable_variables)
+        )
+
+        self.train_loss(loss)
+        self.train_accuracy(padded_accuracy(tar_real, predictions))
+
+    def train(self, dataset, epochs):
+        for epoch in range(epochs):
+            start = time.time()
+
+            self.train_loss.reset_states()
+            self.train_accuracy.reset_states()
+
+            for (batch, (inp, tar)) in enumerate(dataset):
+                self.train_step(inp, tar)
+
+                if batch % 50 == 0:
+                    print(
+                        f"Epoch {epoch + 1} Batch {batch} Loss {self.train_loss.result():.4f} Accuracy {self.train_accuracy.result():.4f}"
+                    )
+
+            if (
+                self.checkpoint_manager is not None
+                and (epoch + 1) % self.checkpoint_every == 0
+            ):
+                ckpt_save_path = self.checkpoint_manager.save()
+                print(f"Saving checkpoint for epoch {epoch+1} at {ckpt_save_path}")
+
+            print(
+                f"Epoch {epoch + 1} Loss {self.train_loss.result():.4f} Accuracy {self.train_accuracy.result():.4f}"
+            )
+
+            print(f"Time taken for 1 epoch: {time.time() - start:.2f} secs\n")
 
 
 ###################################################################### Custom Schedule ###################################################################
