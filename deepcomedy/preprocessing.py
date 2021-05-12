@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-def load_verses(path, char_level=False):
+def load_verses(path, char_level=False, pad=False):
     """
     Loads verses from path, encodes them using a tokenizer and pads them so they all have the same dimension.
     """
@@ -30,14 +30,15 @@ def load_verses(path, char_level=False):
     )
     tokenizer.fit_on_texts(raw_text)
 
-    raw_text_encoded = tokenizer.texts_to_sequences(verses)
+    encoded_text = tokenizer.texts_to_sequences(verses)
 
     # Pad each verse to the length of the longest verse
-    padded_text = tf.keras.preprocessing.sequence.pad_sequences(
-        raw_text_encoded, padding="post"
-    )
+    if pad:
+        encoded_text = tf.keras.preprocessing.sequence.pad_sequences(
+            encoded_text, padding="post"
+        )
 
-    return raw_text, padded_text, tokenizer
+    return raw_text, encoded_text, tokenizer
 
 
 # TODO implement ngrams
