@@ -28,7 +28,7 @@ def load_verses(path, char_level=False, pad=False):
     tokenizer = tf.keras.preprocessing.text.Tokenizer(
         filters="", char_level=char_level, lower=False
     )
-    tokenizer.fit_on_texts(raw_text)
+    tokenizer.fit_on_texts(verses)
 
     encoded_text = tokenizer.texts_to_sequences(verses)
 
