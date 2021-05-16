@@ -16,6 +16,7 @@ jupyterlab = "^3.0.14"
 wandb = "^0.10.27"
 jupyterlab-git = "^0.30.0"
 funcy = "^1.15"
+nltk = "^3.6.2"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
