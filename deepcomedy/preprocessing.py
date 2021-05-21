@@ -1,6 +1,18 @@
 import tensorflow as tf
 
 
+def is_empty(str):
+    return str == ""
+
+
+def is_not_empty(str):
+    return str != ""
+
+
+def strip(x):
+    return x.strip()
+
+
 def load_verses(path, char_level=False, pad=False, tokenize=True):
     """
     Loads verses from path, encodes them using a tokenizer and pads them so they all have the same dimension.
@@ -43,6 +55,3 @@ def load_verses(path, char_level=False, pad=False, tokenize=True):
 
     else:
         return raw_text, verses
-
-
-# TODO implement ngrams
