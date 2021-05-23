@@ -239,6 +239,7 @@ class TransformerTrainer(object):
             self.optimizer = optimizer
 
         self.checkpoint_every = checkpoint_every
+
         if checkpoint_save_path is not None:
 
             ckpt = tf.train.Checkpoint(
@@ -253,6 +254,8 @@ class TransformerTrainer(object):
             if self.checkpoint_manager.latest_checkpoint:
                 ckpt.restore(self.checkpoint_manager.latest_checkpoint)
                 print("Latest checkpoint restored!!")
+        else:
+            self.checkpoint_manager = None
 
         self.train_loss = tf.keras.metrics.Mean(name="train_loss")
         self.train_accuracy = tf.keras.metrics.Mean(name="train_accuracy")
@@ -296,7 +299,8 @@ class TransformerTrainer(object):
                     wandb.log(
                         {
                             "loss": self.train_loss.result(),
-                            "accuracy": self.train_loss.result(),
+                            "accuracy": self.train_accuracy.result(),
+                            "epoch": epoch,
                         }
                     )
 
