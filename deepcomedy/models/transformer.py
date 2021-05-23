@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import wandb
 
 from .layers import *
 
@@ -277,7 +278,7 @@ class TransformerTrainer(object):
         self.train_loss(loss)
         self.train_accuracy(padded_accuracy(tar_real, predictions))
 
-    def train(self, dataset, epochs):
+    def train(self, dataset, epochs, log_wandb=False):
         for epoch in range(epochs):
             start = time.time()
 
@@ -290,6 +291,13 @@ class TransformerTrainer(object):
                 if batch % 50 == 0:
                     print(
                         f"Epoch {epoch + 1} Batch {batch} Loss {self.train_loss.result():.4f} Accuracy {self.train_accuracy.result():.4f}"
+                    )
+                if log_wandb:
+                    wandb.log(
+                        {
+                            "loss": self.train_loss.result(),
+                            "accuracy": self.train_loss.result(),
+                        }
                     )
 
             if (
