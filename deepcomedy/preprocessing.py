@@ -1,4 +1,5 @@
 import tensorflow as tf
+import re
 
 
 def is_empty(str):
@@ -11,6 +12,41 @@ def is_not_empty(str):
 
 def strip(x):
     return x.strip()
+
+
+def preprocess_tercets(text):
+
+    # Drop the first syllable separator from the syllabified text
+    text = "\n".join([line.strip() for line in text.split("\n")])
+
+    # Add a space after each character (single space becomes double space)
+    text = re.sub(r"(.)", r"\1 ", text).strip()
+
+    # Substitute multiple spaces with <SEP>
+    text = re.sub(r" {2,}", " <SEP> ", text)
+
+    # Substitute double newline with End-of-Tercet token
+    text = re.sub(r"\n{2,}", " <EOT> <GO> ", text)
+
+    # Substitute single newline with start of verse token
+    text = re.sub(r"\n", " <GO> ", text)
+
+    # Substitute multiple spaces with single space
+    text = re.sub(r" {2,}", " ", text)
+
+    # Add first GO and last EOT tokens
+    text = "<GO> " + text + " <EOT>"
+
+    return text
+
+
+def slice_windows(text, window_size):
+    text_windows = []
+
+    for i in range(0, len(text) - window_size + 1, window_size):
+        text_windows.append(text[i : i + window_size])
+
+    return tf.convert_to_tensor(text_windows)
 
 
 def load_verses(path, char_level=False, pad=False, tokenize=True):
