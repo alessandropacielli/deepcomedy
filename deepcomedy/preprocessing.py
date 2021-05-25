@@ -16,7 +16,7 @@ def strip(x):
 
 def preprocess_tercets(text):
 
-    # Drop the first syllable separator from the syllabified text
+    # Strip each verse
     text = "\n".join([line.strip() for line in text.split("\n")])
 
     # Add a space after each character (single space becomes double space)
@@ -29,7 +29,7 @@ def preprocess_tercets(text):
     text = re.sub(r"\n{2,}", " <EOT> <GO> ", text)
 
     # Substitute single newline with start of verse token
-    text = re.sub(r"\n", " <GO> ", text)
+    text = re.sub(r"\n", " <EOV> <GO> ", text)
 
     # Substitute multiple spaces with single space
     text = re.sub(r" {2,}", " ", text)
