@@ -61,7 +61,10 @@ def preprocess_tercets(text, word_level=False):
         # Remove spaces
         text = re.sub(r" ", "", text)
 
-        text = re.sub(r"<.*>", " \1 ", text)
+        # Add spaces to tags only
+        text = re.sub(r"<[^>]*>", " \g<0> ", text)
+
+        text = text.strip()
 
     return text
 
