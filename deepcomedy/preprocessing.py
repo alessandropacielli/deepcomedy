@@ -14,19 +14,57 @@ def strip(x):
     return x.strip()
 
 
-def preprocess_tercets(text):
+def preprocess_tercets(text, char_level=False):
 
     # Strip each verse
     text = "\n".join([line.strip() for line in text.split("\n")])
 
-    # Add a space after each character (single space becomes double space)
-    text = re.sub(r"(.)", r"\1 ", text).strip()
+    if char_level:
 
-    # Substitute multiple spaces with <SEP>
-    text = re.sub(r" {2,}", " <SEP> ", text)
+    	# Add a space after each character (single space becomes double space)
+    	text = re.sub(r"(.)", r"\1 ", text).strip()
+
+    	# Substitute multiple spaces with <SEP>
+    	text = re.sub(r" {2,}", " <SEP> ", text)
+
+    else:
+
+	# Substitute spaces with <SEP>
+    	text = re.sub(r" ", " <SEP> ", text)
 
     # Substitute double newline with End-of-Tercet token
     text = re.sub(r"\n{2,}", " <EOT> <GO> ", text)
+
+    # Substitute single newline with start of verse token
+    text = re.sub(r"\n", " <GO> ", text)
+
+    # Substitute multiple spaces with single space
+    text = re.sub(r" {2,}", " ", text)
+
+    # Add first GO and last EOT tokens
+    text = "<GO> " + text + " <EOT>"
+
+    return text
+
+def preprocess_verses(text,  char_level=False):
+
+    # Strip each verse
+    text = "\n".join([line.strip() for line in text.split("\n")])
+    if char_level:
+
+    	# Add a space after each character (single space becomes double space)
+    	text = re.sub(r"(.)", r"\1 ", text).strip()
+
+    	# Substitute multiple spaces with <SEP>
+    	text = re.sub(r" {2,}", " <SEP> ", text)
+
+    else:
+
+	# Substitute spaces with <SEP>
+    	text = re.sub(r" ", " <SEP> ", text)
+
+    # Substitute double newline with a single newline
+    text = re.sub(r"\n{2,}", "\n", text)
 
     # Substitute single newline with start of verse token
     text = re.sub(r"\n", " <EOV> <GO> ", text)
@@ -34,8 +72,8 @@ def preprocess_tercets(text):
     # Substitute multiple spaces with single space
     text = re.sub(r" {2,}", " ", text)
 
-    # Add first GO and last EOT tokens
-    text = "<GO> " + text + " <EOT>"
+    # Add first GO and last EOV tokens
+    text = "<GO> " + text + " <EOV>"
 
     return text
 
