@@ -14,7 +14,27 @@ def strip(x):
     return x.strip()
 
 
-def preprocess_tercets(text):
+def preprocess_tercets(text, word_level=False):
+
+    """
+    Accepts text in the form:
+
+    |Nel |mez|zo |del |cam|min |di |no|stra |vi|ta
+    |mi |ri|tro|vai |per |u|na |sel|va o|scu|ra,
+    |ché |la |di|rit|ta |via |e|ra |smar|ri|ta.
+
+    |Ahi |quan|to a |dir |qual |e|ra è |co|sa |du|ra
+
+    Performs the following:
+
+        1. Translates whitespaces as following:
+            · single/multiple spaces --> <SEP> token
+            · single newline character --> End-of-Verse (<EOV>)
+            · multiple newline characters --> End-of-Tercet (<EOT>)
+
+        2. Adds a <GO> token in the beginning of each verse.
+        3. Adds a space between each token (char if word_level is False, words otherwise)
+    """
 
     # Strip each verse
     text = "\n".join([line.strip() for line in text.split("\n")])
@@ -36,6 +56,12 @@ def preprocess_tercets(text):
 
     # Add first GO and last EOT tokens
     text = "<GO> " + text + " <EOT>"
+
+    if word_level:
+        # Remove spaces
+        text = re.sub(r" ", "", text)
+
+        text = re.sub(r"<.*>", " \1 ", text)
 
     return text
 
