@@ -1,8 +1,11 @@
 import numpy as np
+from strsimpy.levenshtein import Levenshtein
 import tensorflow as tf
 import wandb
 
 from .layers import *
+
+from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 
 import time
 
@@ -259,6 +262,7 @@ class TransformerTrainer(object):
 
         self.train_loss = tf.keras.metrics.Mean(name="train_loss")
         self.train_accuracy = tf.keras.metrics.Mean(name="train_accuracy")
+        self.val_accuracy = tf.keras.metrics.Mean(name="val_accuracy")
 
     @tf.function
     def train_step(self, inp, tar):
@@ -296,10 +300,11 @@ class TransformerTrainer(object):
                         f"Epoch {epoch + 1} Batch {batch} Loss {self.train_loss.result():.4f} Accuracy {self.train_accuracy.result():.4f}"
                     )
                 if log_wandb:
+                    # TODO log validation loss / accuracy
                     wandb.log(
                         {
-                            "loss": self.train_loss.result(),
-                            "accuracy": self.train_accuracy.result(),
+                            "train_loss": self.train_loss.result(),
+                            "train_accuracy": self.train_accuracy.result(),
                             "epoch": epoch,
                         }
                     )
@@ -316,6 +321,61 @@ class TransformerTrainer(object):
             )
 
             print(f"Time taken for 1 epoch: {time.time() - start:.2f} secs\n")
+
+    def evaluate(
+        self, input_sequence, target_sequence, start_symbol, stop_symbol, max_length=400
+    ):
+        """
+        Predicts the output of the model given `starting_sequence`.
+        The `starting_sequence` is encoded by the Encoder, then its output is fed to the Decoder,
+        whose output is fed back into the Decoder until the `stop_symbol` token is produced
+
+        """
+
+        levenshtein = NormalizedLevenshtein()
+
+        output = tf.repeat([[start_symbol]], repeats=input_sequence.shape[0], axis=0)
+
+        # output = tf.expand_dims(output, 0)
+
+        for _ in range(max_length):
+            enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
+                input_sequence, output
+            )
+
+            # predictions.shape == (batch_size, seq_len, vocab_size)
+            predictions, _ = self.transformer(
+                input_sequence,
+                output,
+                False,
+                enc_padding_mask,
+                combined_mask,
+                dec_padding_mask,
+            )
+
+            # select the last character from the seq_len dimension
+            predicted_ids = tf.argmax(predictions[:, -1:, :], axis=-1)
+
+            # concatenate the predicted_id to the output which is given to the decoder as its input.
+            output = tf.concat(
+                [
+                    tf.cast(output, dtype=tf.int32),
+                    tf.cast(predicted_ids, dtype=tf.int32),
+                ],
+                axis=-1,
+            )
+
+            # return the result if all outputs contain at least one stop symbol
+            if all(list(map(lambda x: stop_symbol in x, output))):
+                break
+
+        # Validation accuracy is computed as the levenshtein similarity between expected output and produced output
+        # If input is a batch the average similarity is returned
+        val_acc = np.mean(
+            [levenshtein.similarity(x, y) for x, y in zip(output, target_sequence)]
+        )
+
+        return output, val_acc
 
 
 ###################################################################### Custom Schedule ###################################################################
