@@ -225,7 +225,7 @@ class TransformerTrainer(object):
             from_logits=True, reduction="none"
         ),
         checkpoint_every=5,
-        checkpoint_save_path="./checkpoints/train",
+        checkpoint_save_path=None,
     ):
         super(TransformerTrainer, self).__init__()
 
@@ -286,6 +286,7 @@ class TransformerTrainer(object):
         self.train_accuracy(padded_accuracy(tar_real, predictions))
 
     def train(self, dataset, epochs, log_wandb=False):
+        # TODO implement callback system for validation stats
         for epoch in range(epochs):
             start = time.time()
 
