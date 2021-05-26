@@ -379,6 +379,31 @@ class TransformerTrainer(object):
         return output, val_acc
 
 
+def make_transformer_model(
+    config, input_vocab_size, target_vocab_size, checkpoint_save_path=None
+):
+    """
+    Creates a transformer model and its trainer from wandb config dictionary
+    """
+    transformer = Transformer(
+        num_layers=config["num_layers"],
+        d_model=config["d_model"],
+        num_heads=config["num_heads"],
+        dff=config["dff"],
+        input_vocab_size=input_vocab_size,
+        target_vocab_size=target_vocab_size,
+        pe_input=1000,
+        pe_target=1000,
+        rate=0.1,
+    )
+
+    transformer_trainer = TransformerTrainer(
+        transformer, checkpoint_save_path=checkpoint_save_path
+    )
+
+    return transformer, transformer_trainer
+
+
 ###################################################################### Custom Schedule ###################################################################
 class TransformerCustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):

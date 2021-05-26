@@ -131,3 +131,12 @@ def load_verses(path, char_level=False, pad=False, tokenize=True):
 
     else:
         return raw_text, verses
+
+
+def make_dataset(*sequences, batch_size=32):
+    buffer_size = len(sequences[0])
+
+    dataset = tf.data.Dataset.from_tensor_slices(tuple(sequences)).shuffle(buffer_size)
+    dataset = dataset.batch(batch_size, drop_remainder=True)
+
+    return dataset
