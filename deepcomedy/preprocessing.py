@@ -14,7 +14,14 @@ def strip(x):
     return x.strip()
 
 
-def preprocess_tercets(text, word_level=False):
+def preprocess_text(
+    text,
+    token_sep="<SEP>",
+    start_of_verse="<GO>",
+    end_of_verse="<EOV>",
+    end_of_tercet="<EOT>",
+    word_level=False,
+):
 
     """
     Accepts text in the form:
@@ -43,19 +50,23 @@ def preprocess_tercets(text, word_level=False):
     text = re.sub(r"(.)", r"\1 ", text).strip()
 
     # Substitute multiple spaces with <SEP>
-    text = re.sub(r" {2,}", " <SEP> ", text)
+    text = re.sub(r" {2,}", " {} ".format(token_sep), text)
 
     # Substitute double newline with End-of-Tercet token
-    text = re.sub(r"\n{2,}", " <EOT> <GO> ", text)
+    text = re.sub(
+        r"\n{2,}",
+        " {} {} {} ".format(end_of_verse, end_of_tercet, start_of_verse),
+        text,
+    )
 
     # Substitute single newline with start of verse token
-    text = re.sub(r"\n", " <EOV> <GO> ", text)
+    text = re.sub(r"\n", " {} {} ".format(end_of_verse, start_of_verse), text)
+
+    # Add first GO and last EOT tokens
+    text = start_of_verse + " " + text + " " + end_of_verse + " " + end_of_tercet
 
     # Substitute multiple spaces with single space
     text = re.sub(r" {2,}", " ", text)
-
-    # Add first GO and last EOT tokens
-    text = "<GO> " + text + " <EOT>"
 
     if word_level:
         # Remove spaces
@@ -64,7 +75,7 @@ def preprocess_tercets(text, word_level=False):
         # Add spaces to tags only
         text = re.sub(r"<[^>]*>", " \g<0> ", text)
 
-        text = text.strip()
+    text = text.strip()
 
     return text
 
