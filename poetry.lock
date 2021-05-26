@@ -1507,6 +1507,14 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "strsimpy"
+version = "0.2.0"
+description = "A library implementing different string similarity and distance measures"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "subprocess32"
 version = "3.5.4"
 description = "A backport of the subprocess module from Python 3 for use on 2.x."
@@ -1887,7 +1895,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<4.0"
-content-hash = "5feed05c45c30d8704ab8780b546366eef9e1290f6a0eee80b0979a02d1b4175"
+content-hash = "ec0fbfef6a82a6c5e7a8c2aca66c5b067c78a56bda4afcb0f9bb33c30fbb6e25"
 
 [metadata.files]
 absl-py = [
@@ -2873,6 +2881,10 @@ smmap = [
 sniffio = [
     {file = "sniffio-1.2.0-py3-none-any.whl", hash = "sha256:471b71698eac1c2112a40ce2752bb2f4a4814c22a54a3eed3676bc0f5ca9f663"},
     {file = "sniffio-1.2.0.tar.gz", hash = "sha256:c4666eecec1d3f50960c6bdf61ab7bc350648da6c126e3cf6898d8cd4ddcd3de"},
+]
+strsimpy = [
+    {file = "strsimpy-0.2.0-py3-none-any.whl", hash = "sha256:5986dc0a8a3f06869594a4736e03b4cde3f5dbaf5c086241301fd122f8e8aca1"},
+    {file = "strsimpy-0.2.0.tar.gz", hash = "sha256:a02fd6eb36130311d4978ddbef0248be19a80a715c3100e6ce8d6faab24c8122"},
 ]
 subprocess32 = [
     {file = "subprocess32-3.5.4-cp27-cp27m-macosx_10_6_intel.whl", hash = "sha256:88e37c1aac5388df41cc8a8456bb49ebffd321a3ad4d70358e3518176de3a56b"},
