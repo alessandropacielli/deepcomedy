@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import tensorflow as tf
 
-from .layers import *
+from .transformer import Encoder
 
 from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 
