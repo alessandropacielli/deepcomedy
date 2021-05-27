@@ -1,3 +1,6 @@
+import re
+
+
 def strip_tokens(x):
 
     x = re.sub(r"[ ]+", "", x)
