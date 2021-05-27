@@ -383,10 +383,11 @@ def evaluate(
     max_length=400,
 ):
     """
-    Predicts the output of the model given `starting_sequence`.
-    The `starting_sequence` is encoded by the Encoder, then its output is fed to the Decoder,
-    whose output is fed back into the Decoder until the `stop_symbol` token is produced
+    Predicts the output of the model given the `input_sequence`.
+    The `input_sequence` is encoded by the Encoder, then its output is fed to the Decoder,
+    whose output is fed back into the Decoder until the `stop_symbol` token is produced.
 
+    This function works with a batch of inputs and stops when all outputs include a stop symbol.
     """
 
     output = tf.repeat([[start_symbol]], repeats=input_sequence.shape[0], axis=0)
