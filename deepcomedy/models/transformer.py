@@ -378,7 +378,6 @@ def make_syll_score(input_sequence, target_sequence, start_symbol, stop_symbol):
 def evaluate(
     transformer,
     input_sequence,
-    target_sequence,
     start_symbol,
     stop_symbol,
     max_length=400,
