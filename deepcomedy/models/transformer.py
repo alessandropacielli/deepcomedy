@@ -361,20 +361,6 @@ class TransformerTrainer(object):
             print(f"Time taken for 1 epoch: {time.time() - start:.2f} secs\n")
 
 
-def make_syll_score(input_sequence, target_sequence, start_symbol, stop_symbol):
-    """
-    Returns a wrapper to the evaluate function to use as `validation_score` parameter in the transformer training loop.
-    """
-
-    def eval_wrapper(transformer):
-
-        return evaluate(
-            transformer, input_sequence, target_sequence, start_symbol, stop_symbol
-        )
-
-    return eval_wrapper
-
-
 def evaluate(
     transformer,
     input_sequence,
