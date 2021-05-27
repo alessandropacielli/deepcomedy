@@ -4,6 +4,7 @@ def strip_tokens(x):
     x = re.sub("<GO>", "\n", x)
     x = re.sub("<SEP>", " ", x)
     x = re.sub("<[^>]*>", "", x)
+    x = x.strip()
 
     return x
 
