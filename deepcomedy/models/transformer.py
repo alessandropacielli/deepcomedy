@@ -390,26 +390,28 @@ def evaluate(
 
     """
 
-    levenshtein = NormalizedLevenshtein()
-
     output = tf.repeat([[start_symbol]], repeats=input_sequence.shape[0], axis=0)
 
-    # output = tf.expand_dims(output, 0)
+    enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
+        input_sequence, output
+    )
+
+    enc_output = transformer.encoder(
+        input_sequence, False, enc_padding_mask
+    )  # (batch_size, inp_seq_len, d_model)
 
     for _ in range(max_length):
+
         enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
             input_sequence, output
         )
 
-        # predictions.shape == (batch_size, seq_len, vocab_size)
-        predictions, _ = transformer(
-            input_sequence,
-            output,
-            False,
-            enc_padding_mask,
-            combined_mask,
-            dec_padding_mask,
+        # dec_output.shape == (batch_size, tar_seq_len, d_model)
+        dec_output, _ = transformer.decoder(
+            output, enc_output, False, combined_mask, dec_padding_mask
         )
+
+        predictions = transformer.final_layer(dec_output)
 
         # select the last character from the seq_len dimension
         predicted_ids = tf.argmax(predictions[:, -1:, :], axis=-1)
@@ -427,13 +429,7 @@ def evaluate(
         if all(list(map(lambda x: stop_symbol in x, output))):
             break
 
-    # Validation accuracy is computed as the levenshtein similarity between expected output and produced output
-    # If input is a batch the average similarity is returned
-    val_acc = np.mean(
-        [levenshtein.similarity(x, y) for x, y in zip(output, target_sequence)]
-    )
-
-    return output, val_acc
+    return output
 
 
 def make_transformer_model(
