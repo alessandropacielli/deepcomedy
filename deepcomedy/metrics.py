@@ -112,3 +112,7 @@ def get_tercets(text, end_of_verse="\n"):
 
 def tercet_to_strophe_ratio(verses):
     return len(get_tercets(verses)) / len(get_strophes(verses))
+
+
+# TODO word correctness
+# TODO plagiarism

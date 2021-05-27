@@ -1,5 +1,4 @@
 import numpy as np
-from strsimpy.levenshtein import Levenshtein
 import tensorflow as tf
 import wandb
 
@@ -363,8 +362,8 @@ class TransformerTrainer(object):
 
 def evaluate(
     transformer,
-    input_sequence,
-    start_symbol,
+    encoder_input,
+    decoder_input,
     stop_symbol,
     max_length=400,
 ):
@@ -376,20 +375,20 @@ def evaluate(
     This function works with a batch of inputs and stops when all outputs include a stop symbol.
     """
 
-    output = tf.repeat([[start_symbol]], repeats=input_sequence.shape[0], axis=0)
+    output = decoder_input
 
     enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
-        input_sequence, output
+        encoder_input, output
     )
 
     enc_output = transformer.encoder(
-        input_sequence, False, enc_padding_mask
+        encoder_input, False, enc_padding_mask
     )  # (batch_size, inp_seq_len, d_model)
 
     for _ in range(max_length):
 
         enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
-            input_sequence, output
+            encoder_input, output
         )
 
         # dec_output.shape == (batch_size, tar_seq_len, d_model)
