@@ -75,6 +75,9 @@ def preprocess_text(
         # Add spaces to tags only
         text = re.sub(r"<[^>]*>", " \g<0> ", text)
 
+        # Substitute multiple spaces with single space
+        text = re.sub(r" {2,}", " ", text)
+
     text = text.strip()
 
     return text
