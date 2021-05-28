@@ -289,6 +289,7 @@ class TransformerTrainer(object):
 
         self.train_loss = tf.keras.metrics.Mean(name="train_loss")
         self.train_accuracy = tf.keras.metrics.Mean(name="train_accuracy")
+        self.val_loss = tf.keras.metrics.Mean(name="val_loss")
         self.val_accuracy = tf.keras.metrics.Mean(name="val_accuracy")
 
     @tf.function
@@ -312,7 +313,27 @@ class TransformerTrainer(object):
         self.train_loss(loss)
         self.train_accuracy(padded_accuracy(tar_real, predictions))
 
-    def train(self, dataset, epochs, log_wandb=False, validation_score=None):
+    def val_step(self, inp, tar):
+        tar_inp = tar[:, :-1]
+        tar_real = tar[:, 1:]
+        enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
+
+        predictions, _ = self.transformer(
+            inp, tar_inp, False, enc_padding_mask, combined_mask, dec_padding_mask
+        )
+        loss = padded_loss(tar_real, predictions, self.loss_function)
+
+        self.val_loss(loss)
+        self.val_accuracy(padded_accuracy(tar_real, predictions))
+
+    def train(
+        self,
+        dataset,
+        epochs,
+        log_wandb=False,
+        validation_dataset=None,
+        validation_every=5,
+    ):
         """
         As validation score you can pass the return value of `make_syll_score`
         """
@@ -323,6 +344,7 @@ class TransformerTrainer(object):
             self.train_loss.reset_states()
             self.train_accuracy.reset_states()
 
+            # Train step
             for (batch, (inp, tar)) in enumerate(dataset):
                 self.train_step(inp, tar)
 
@@ -330,21 +352,36 @@ class TransformerTrainer(object):
                     print(
                         f"Epoch {epoch + 1} Batch {batch} Loss {self.train_loss.result():.4f} Accuracy {self.train_accuracy.result():.4f}"
                     )
-                if log_wandb:
-
-                    metrics = {
+            if log_wandb:
+                wandb.log(
+                    {
                         "train_loss": self.train_loss.result(),
                         "train_accuracy": self.train_accuracy.result(),
-                        "epoch": epoch,
-                    }
+                    },
+                    step=epoch + 1,
+                )
 
-                    # TODO log validation loss / accuracy
-                    if validation_score:
+            # Validation step only if validation dataset is not null and
+            if validation_dataset and ((epoch + 1) % validation_every == 0):
+                for (batch, (inp, tar)) in enumerate(validation_dataset):
+                    self.val_step(inp, tar)
 
-                        score = validation_score(self.transformer)
-                        metrics["val_score"] = score
+                    if batch % 50 == 0:
+                        print(
+                            f"Epoch {epoch + 1} Batch {batch} Validation Loss {self.val_loss.result():.4f} Validation Accuracy {self.val_accuracy.result():.4f}"
+                        )
 
-                    wandb.log(metrics)
+                if log_wandb:
+                    wandb.log(
+                        {
+                            "val_loss": self.val_loss.result(),
+                            "val_accuracy": self.val_accuracy.result(),
+                        },
+                        step=epoch + 1,
+                    )
+
+                self.val_loss.reset_states()
+                self.val_accuracy.reset_states()
 
             if (
                 self.checkpoint_manager is not None
