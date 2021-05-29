@@ -1,4 +1,5 @@
-from .util import is_not_empty, strip
+from .utils import is_not_empty, strip
+import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 import numpy as np
 
@@ -132,7 +133,20 @@ def ngrams_plagiarism(generated_text, original_text, n=4):
     for i in range(total_ngrams):
         ngram = tokenizer.join(generated_text_tokens[i : i + n])
         plagiarism_counter += 1 if ngram in original_text else 0
-    return 1 - (plagiarism_counter / total_ngrams)
+    return plagiarism_counter / total_ngrams
+
+
+def correct_words_ratio(gen_words, real_words, return_errors=False):
+    exact_matches = np.array([word in real_words for word in gen_words], dtype=bool)
+    n_exact_matches = sum(exact_matches)
+
+    ratio = n_exact_matches / len(gen_words)
+
+    if return_errors:
+
+        return ratio, np.array(list(gen_words))[~exact_matches]
+
+    return ratio
 
 
 # Adapted from https://github.com/AlessandroLiscio/DeepComedy
@@ -172,6 +186,7 @@ def find_similar_words(
         return (most_similar, best_distance) if return_best_distance else most_similar
 
 
+# Adapted from https://github.com/AlessandroLiscio/DeepComedy
 def word_distance(a, b):
     from nltk.metrics import edit_distance
 
@@ -179,6 +194,7 @@ def word_distance(a, b):
     return d
 
 
+# Adapted from https://github.com/AlessandroLiscio/DeepComedy
 def incorrectness(
     words: set,
     real_words: set,
