@@ -72,11 +72,9 @@ def preprocess_text(
         # Remove spaces
         text = re.sub(r" ", "", text)
 
-        # Add spaces to tags only
+        # Add spaces to tags and punctuation
         text = re.sub(r"<[^>]*>", " \g<0> ", text)
-
-        # Substitute multiple spaces with single space
-        text = re.sub(r" {2,}", " ", text)
+	text = re.sub(r'[-:,?“‘\)—»«!”\(";.’]', " \g<0> ", text)
 
     text = text.strip()
 
