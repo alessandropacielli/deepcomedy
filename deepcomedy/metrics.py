@@ -1,5 +1,6 @@
-from .preprocessing import is_empty, is_not_empty, strip
+from .util import is_not_empty, strip
 import tensorflow_datasets as tfds
+import numpy as np
 
 
 def count_syllables(verse, syllable_separator="|"):
@@ -40,10 +41,12 @@ def correct_hendecasyllables_ratio(verses):
     return correct_verses / total_verses
 
 
+# Adapted from https://gitlab.com/zugo91/nlgpoetry
 def is_vowel(c):
     return c in "aeiouAEIOUàèéìòù"
 
 
+# Adapted from https://gitlab.com/zugo91/nlgpoetry
 def find_termination(w):
     # TODO improve termination algorithm
     v_count = 0
@@ -56,6 +59,7 @@ def find_termination(w):
                 return w[i:]
 
 
+# Adapted from https://gitlab.com/zugo91/nlgpoetry
 def are_in_rhyme(w1, w2):
     t1 = find_termination(w1)
     t2 = find_termination(w2)
@@ -115,9 +119,6 @@ def tercet_to_strophe_ratio(verses):
     return len(get_tercets(verses)) / len(get_strophes(verses))
 
 
-# TODO word correctness
-
-
 # Adapted from https://github.com/AlessandroLiscio/DeepComedy
 def ngrams_plagiarism(generated_text, original_text, n=4):
     # the tokenizer is used to remove non-alphanumeric symbols
@@ -132,3 +133,123 @@ def ngrams_plagiarism(generated_text, original_text, n=4):
         ngram = tokenizer.join(generated_text_tokens[i : i + n])
         plagiarism_counter += 1 if ngram in original_text else 0
     return 1 - (plagiarism_counter / total_ngrams)
+
+
+# Adapted from https://github.com/AlessandroLiscio/DeepComedy
+def find_similar_words(
+    word: str, vocabulary: set, verbose=False, return_best_distance=False
+):
+    """
+    Given a word, find the most similar words in the vocabulary. \n
+    The similarity between words is computed by the 'edit (Levenshtein) distance'. \n
+    If more than one word from the vocabulary has a same distance from the requested word, \n
+    then a list containing them is returned. \n
+    If #return_best_distance is True, then returns a tuple containing the best words and the best distance.
+    """
+    if verbose:
+        print(f"looking for words similar to '{word}'")
+    # try normal search
+    if word in vocabulary:
+        if verbose:
+            print(f"\t{(word, 0)} <-- match")
+        return ([word], 0) if return_best_distance else [word]
+
+    else:
+        most_similar = []
+        best_distance = len(
+            word
+        )  # the distance between a word and an empty word is equal to the lenght of the word itself
+
+        for real_word in vocabulary:
+            dist = word_distance(word, real_word)
+            if dist <= best_distance:
+                if verbose:
+                    print(f"\t {real_word} ({dist})")
+                if dist < best_distance:
+                    best_distance = dist
+                    most_similar = []
+                most_similar.append(real_word)
+        return (most_similar, best_distance) if return_best_distance else most_similar
+
+
+def word_distance(a, b):
+    from nltk.metrics import edit_distance
+
+    d = edit_distance(a, b)
+    return d
+
+
+def incorrectness(
+    words: set,
+    real_words: set,
+    verbose=False,
+    return_match_ratio=False,
+    plot_frequencies=False,
+):
+    """
+    Measures the amount of incorrect words, with respect to the given set of real words.
+    If all the passed words exists in the real words set, then the returned value is 0, otherwise return a positive real number.
+    The score is computed as a weighted average of the frequencies of the distances of the words from the real words.
+    A set of words each of which has the nearest word (in Levenshtein distance) at 1 or 2 is way better of another one
+    whose nearest word is 10 points far from the most similar real word.
+    """
+    if verbose:
+        print(
+            "{}\n{:3}\t{:10}\t{:5}\t{}\n{}\n".format(
+                "=" * 40, "%", "WORD", "DIST", "SIMILAR TO", "=" * 40
+            )
+        )
+    n_real_words = len(words)
+    # compute frequencies
+    distances = []
+    for i, my_word in enumerate(words):
+        most_similar, distance = find_similar_words(
+            word=my_word, vocabulary=real_words, return_best_distance=True
+        )
+        distances.append(distance)
+
+    # compute frequencies
+    frequencies = dict(
+        zip(np.unique(distances), [distances.count(d) for d in np.unique(distances)])
+    )
+
+    # add the zero-frequency if not present (in order to compute the correct words percentage)
+    if 0 not in frequencies.keys():
+        frequencies[0] = 0
+
+    if verbose:
+        print("\n{}\n frequencies: {}".format("-" * 40, dict(frequencies)))
+
+    # computing correctness
+    incorrectness = round(
+        np.average(
+            np.unique(distances),
+            weights=[distances.count(d) for d in np.unique(distances)],
+        ),
+        2,
+    )
+
+    # percentage of incorrect words
+    ratio = 1 - round(frequencies[0] / len(words), 2)
+
+    # print final results
+    if verbose:
+        print(
+            " match ratio:  {} %\t({} / {}) \n{}".format(
+                ratio, frequencies[0], len(words), "=" * 40
+            )
+        )
+        if distance != 0:
+            print(
+                "{:>3}\t{:15}\t{:<5}\t{}".format(
+                    round(i / n_real_words * 100, 1), my_word, distance, most_similar
+                )
+            )
+    # plot
+    if plot_frequencies:
+        from matplotlib import pyplot as pyplot
+
+        plt.bar(list(frequencies), [frequencies[key] for key in list(frequencies)])
+        plt.show()
+
+    return (incorrectness, ratio) if return_match_ratio else incorrectness

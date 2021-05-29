@@ -2,18 +2,6 @@ import tensorflow as tf
 import re
 
 
-def is_empty(str):
-    return str == ""
-
-
-def is_not_empty(str):
-    return str != ""
-
-
-def strip(x):
-    return x.strip()
-
-
 def preprocess_text(
     text,
     token_sep="<SEP>",
@@ -74,7 +62,7 @@ def preprocess_text(
 
         # Add spaces to tags and punctuation
         text = re.sub(r"<[^>]*>", " \g<0> ", text)
-	text = re.sub(r'[-:,?“‘\)—»«!”\(";.’]', " \g<0> ", text)
+        text = re.sub(r'[-:,?“‘\)—»«!”\(";.’]', " \g<0> ", text)
 
     text = text.strip()
 
