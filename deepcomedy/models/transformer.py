@@ -502,6 +502,38 @@ def make_transformer_model(
 
     return transformer, transformer_trainer
 
+def save_transformer_model(transformer, path):
+  transformer.save_weights('path')
+
+def load_transformer_model(config, input_vocab_size, target_vocab_size, target_tokenizer, path):
+  transformer = Transformer(
+          num_layers=config["num_layers"],
+          d_model=config["d_model"],
+          num_heads=config["num_heads"],
+          dff=config["dff"],
+          input_vocab_size=input_vocab_size,
+          target_vocab_size=target_vocab_size,
+          pe_input=1000,
+          pe_target=1000,
+          rate=0.1,
+      )
+  # In order to load the new weights the model should be called once for the variables to be initialized
+
+  # Any inp, tar is ok here
+  start_symbol = target_tokenizer.word_index["<GO>"]
+  stop_symbol = target_tokenizer.word_index["<EOV>"]
+
+  inp = tf.convert_to_tensor([[start_symbol]])
+  tar = tf.convert_to_tensor([[start_symbol]])
+
+  enc_padding_mask, look_ahead_mask, dec_padding_mask = create_masks(inp, tar)
+
+  transformer(inp, tar, False, enc_padding_mask, look_ahead_mask, dec_padding_mask);
+
+  transformer.load_weights(path)
+
+  return transformer
+
 
 ###################################################################### Custom Schedule ###################################################################
 class TransformerCustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
