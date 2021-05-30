@@ -397,17 +397,43 @@ class TransformerTrainer(object):
             print(f"Time taken for 1 epoch: {time.time() - start:.2f} secs\n")
 
 
+def choose_greedy(logits):
+    # select the last character from the seq_len dimension
+    predicted_ids = tf.argmax(logits[:, -1:, :], axis=-1)
+    return predicted_ids
+
+
+def choose_topk(logits, k=5, temperature=0.5):
+
+    # TODO not batched
+
+    predictions = logits[:, -1:, :]  # (batch_size, 1, vocab_size)
+    predictions, indices = tf.math.top_k(predictions, k=k)
+
+    predictions /= temperature
+    predictions = predictions[0]
+    indices = indices[0][0]
+    predicted_ids = tf.random.categorical(predictions, num_samples=1)[-1, 0].numpy()
+    predicted_ids = indices[predicted_ids]
+
+    predicted_ids = tf.expand_dims(predicted_ids, 0)
+    predicted_ids = tf.expand_dims(predicted_ids, 0)
+
+    return predicted_ids
+
+
 def evaluate(
     transformer,
     encoder_input,
     decoder_input,
     stop_symbol,
-    max_length=400,
+    max_length=200,
+    choose_next_token=choose_greedy,
 ):
     """
-    Predicts the output of the model given the `input_sequence`.
-    The `input_sequence` is encoded by the Encoder, then its output is fed to the Decoder,
-    whose output is fed back into the Decoder until the `stop_symbol` token is produced.
+    Predicts the output of the model given the input_sequence.
+    The input_sequence is encoded by the Encoder, then its output is fed to the Decoder,
+    whose output is fed back into the Decoder until the stop_symbol token is produced.
 
     This function works with a batch of inputs and stops when all outputs include a stop symbol.
     """
@@ -435,8 +461,7 @@ def evaluate(
 
         predictions = transformer.final_layer(dec_output)
 
-        # select the last character from the seq_len dimension
-        predicted_ids = tf.argmax(predictions[:, -1:, :], axis=-1)
+        predicted_ids = choose_next_token(predictions)
 
         # concatenate the predicted_id to the output which is given to the decoder as its input.
         output = tf.concat(
@@ -447,9 +472,8 @@ def evaluate(
             axis=-1,
         )
 
-        # return the result if all outputs contain at least one stop symbol
-        if all(list(map(lambda x: stop_symbol in x, output))):
-            break
+        if sum(output.numpy()[0] == stop_symbol) == 4:
+            return output
 
     return output
 
