@@ -11,6 +11,8 @@ def preprocess_text(
     word_level=False,
 ):
 
+    # TODO remove EOT
+
     """
     Accepts text in the form:
 
@@ -62,7 +64,7 @@ def preprocess_text(
 
         # Add spaces to tags and punctuation
         text = re.sub(r"<[^>]*>", " \g<0> ", text)
-        text = re.sub(r'[-:,?“‘\)—»«!”\(";.’]', " \g<0> ", text)
+        text = re.sub(r'[-:,?“‘\)—»«!”\(";\.’]', " \g<0> ", text)
 
     text = text.strip()
 
