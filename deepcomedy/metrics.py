@@ -2,6 +2,7 @@ from .utils import is_not_empty, strip
 import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 import numpy as np
+from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 
 
 def count_syllables(verse, syllable_separator="|"):
@@ -269,3 +270,19 @@ def incorrectness(
         plt.show()
 
     return (incorrectness, ratio) if return_match_ratio else incorrectness
+
+
+def validate_syllabification(prod, target):
+    """
+    Evaluates the correctness of produced syllabification with a correct reference.
+
+    prod: list[string] produced syllabification as a list of verses
+    target: list[string] correct syllabification as a list of verses
+
+    returns for each verse, whether or not the produced verse is correctly syllabified (exact match)
+        and the edit distance between the produced string and the target
+
+    """
+
+    levenshtein = NormalizedLevenshtein()
+    return [(x == y, levenshtein.similarity(x, y)) for x, y in zip(prod, target)]
