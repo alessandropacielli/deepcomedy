@@ -422,6 +422,19 @@ def choose_topk(logits, k=5, temperature=0.5):
     return predicted_ids
 
 
+def stop_after_quatrain(output, stop_symbol):
+    # TODO not batched!! Only checks first output, ok for generation
+    n_verses = sum(output.numpy()[0] == stop_symbol)
+    return n_verses == 4
+
+
+def stop_after_stop_symbol(output, stop_symbol):
+    """
+    Checks that all generated verses in output (batch_size, vocab_size) have at least one stop symbol
+    """
+    return all(list(map(lambda x: stop_symbol in x, output)))
+
+
 def evaluate(
     transformer,
     encoder_input,
@@ -429,6 +442,7 @@ def evaluate(
     stop_symbol,
     max_length=200,
     choose_next_token=choose_greedy,
+    stopping_condition=stop_after_quatrain,
 ):
     """
     Predicts the output of the model given the input_sequence.
@@ -472,7 +486,7 @@ def evaluate(
             axis=-1,
         )
 
-        if sum(output.numpy()[0] == stop_symbol) == 4:
+        if stopping_condition(output, stop_symbol):
             return output
 
     return output
