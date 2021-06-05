@@ -71,7 +71,7 @@ def are_in_rhyme(w1, w2):
     return False
 
 
-def chained_rhymes_ratio(verses):
+def chained_rhymes_ratio(verses, verbose=False):
     """
     TODO only takes non syllabified verses
     TODO only takes verses without punctuation --> preprocess first!!
@@ -88,9 +88,10 @@ def chained_rhymes_ratio(verses):
         if (i + 1) % 3 != 0:
             total_verses += 1
             correct_rhymes += are_in_rhyme(verses[i], verses[i + 2])
-
-            if not are_in_rhyme(verses[i], verses[i + 2]):
-                print(verses[i], verses[i + 2])
+            
+            # If verbose print incorrect verses
+            if verbose and not are_in_rhyme(verses[i], verses[i + 2]):
+                print("{}\t{}".format(verses[i], verses[i + 2]))
 
     return correct_rhymes / total_verses
 
