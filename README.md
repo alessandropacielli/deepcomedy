@@ -58,4 +58,5 @@ Some of the code is adapted from these sources:
 - [Transformer model for language understanding](https://www.tensorflow.org/text/tutorials/transformer) from Tensorflow
 - https://github.com/AlessandroLiscio/DeepComedy for some metrics
 - [Neural Poetry](https://gitlab.com/zugo91/nlgpoetry) for some metrics and the alternative syllabification
-- [Overleaf](https://www.overleaf.com/) as LaTeX editor for the report
+
+We used [Overleaf](https://www.overleaf.com/) as the LaTeX editor for the report.
