@@ -5,5 +5,4 @@ __pycache__
 .vscode
 wandb
 old
-experiments
 
