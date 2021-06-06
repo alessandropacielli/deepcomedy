@@ -13,6 +13,8 @@ We provide three notebooks which explain our model and the results we obtained:
 - **Char2Char generation and syllabification** --> uses a transformer architecture for both syllabification and text generation; as the name suggests, both encoder and decoder work at character-level.
 - **Word2Char generation** --> we tried to improve the semantics of generated text using a word-level encoder, however the results are only slightly better
 
+You can download the models we trained from [this link](https://drive.google.com/drive/folders/1u4EhtEESAbTRU-53LXSalcx5LQ4StJM3?usp=sharing).
+
 The `deepcomedy` folder contains the custom libraries we use in the notebooks.
 
 The `nlgpoetry` folder contains an alternative syllabification algorithm from [Neural Poetry](https://gitlab.com/zugo91/nlgpoetry). We used this for comparison.
